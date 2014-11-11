@@ -19,7 +19,11 @@ byte stairsPins[] = {
 byte stairsBrightness[] = { 
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 byte stairsCount = 13;       // the number of pins (i.e. the length of the array)
+
 byte railPin = 45;
+byte dimmRail = 0;
+byte railBrightness = 0;
+boolean dimFlg = false;
 
 byte photoPin = A15;
 
@@ -125,7 +129,7 @@ void setTimer(){
   else{
     timer = onTime;  
   }
-  Serial.println(timer);
+  //  Serial.println(timer);
 }
 
 //SPRAWDZONA
@@ -154,6 +158,7 @@ void waveLightOn() {
       }
     }
     frameOnUp++;
+    railOn();
   }
 
   //zapalanie w dół (tylko 5 w przebiegu petli)
@@ -165,6 +170,7 @@ void waveLightOn() {
       }
     }
     frameOnDown++;
+    railOn();
   }
   delay(stepDelay);
 }
@@ -215,6 +221,7 @@ void waveLightOff() {
       }
     }
     frameOffUp++;
+    railOff();
   }
 
   //WŁAŚCIWE WYGASZANIE Z DOLU DO GORY
@@ -226,6 +233,7 @@ void waveLightOff() {
       }
     }
     frameOffDown++;
+    railOff();
   }
 
   //OPOZNIENIE
@@ -256,6 +264,35 @@ void setupWaveFormT() {
 
 }
 
+void railOnDark(){
+
+  if(analogRead(photoPin)<600){
+    dimmRail = 25;
+    if(!dimFlg){
+      analogWrite(railPin,dimmRail);
+      dimFlg = !dimFlg;
+    }
+  }
+  if(analogRead(photoPin)>700){
+    dimmRail = 0;
+    if(dimFlg){
+      analogWrite(railPin,dimmRail);
+      dimFlg = !dimFlg;
+    }
+  }
+
+}
+
+void railOn(){
+  if(railBrightness < 250)
+    railBrightness+=25;
+}
+
+void railOff(){
+  if(railBrightness > dimmRail)
+    railBrightness-=25;
+}
+
 void loop() {
 
   //proba wlaczenia swiatel
@@ -264,6 +301,8 @@ void loop() {
   //proba wylaczenia swiatel
   waveLightOff();
 
+  railOnDark();
+
   //ODLICZANIE ROZPOCZYNAMY PO USTANIU SYGNAŁÓW Z CZUJEK I PO PEŁNYM ZAPALENIU OSWIETLENIA
   if (timer > 1  && digitalRead(upstairsPIR) == LOW && digitalRead(downstairsPIR) == LOW && ((trigerOnUp + trigerOnDown) == TRIGER_OFF) ){
     timer--;
@@ -271,6 +310,11 @@ void loop() {
     //Serial.println(analogRead(photoPin));
   }
 }
+
+
+
+
+
 
 
 
