@@ -23,7 +23,8 @@ byte stairsCount = 13;       // the number of pins (i.e. the length of the array
 byte railPin = 45;
 byte dimmRail = 0;
 byte railBrightness = 0;
-boolean dimFlg = false;
+boolean flgDark = false;
+boolean flgBlck = false;
 
 byte photoPin = A15;
 
@@ -52,7 +53,7 @@ byte lastSeenPir = NO_PIR;
 
 void setup() {
 
-  Serial.begin(9600);
+  //  Serial.begin(9600);
 
   // the array elements are numbered from 0 to (stairsCount - 1).
   // use a for loop to initialize each pin as an output:
@@ -209,6 +210,7 @@ void waveLightOff() {
     trigerOffUp = TRIGER_OFF;
     trigerOffDown = TRIGER_OFF;
     timer=0;
+    flgBlck = false;
     return;
   }
 
@@ -267,30 +269,34 @@ void setupWaveFormT() {
 void railOnDark(){
 
   if(analogRead(photoPin)<600){
-    dimmRail = 25;
-    if(!dimFlg){
+    dimmRail = waveFormT[0][24];
+    if((!flgBlck) && !flgDark){
       analogWrite(railPin,dimmRail);
-      dimFlg = !dimFlg;
+      flgDark = true;
     }
   }
   if(analogRead(photoPin)>700){
     dimmRail = 0;
-    if(dimFlg){
+    if((!flgBlck) && flgDark){
       analogWrite(railPin,dimmRail);
-      dimFlg = !dimFlg;
+      flgDark = false;
     }
+
   }
 
 }
 
 void railOn(){
-  if(railBrightness < 250)
-    railBrightness+=25;
+  if(!flgBlck)
+    flgBlck=true;
+  int lB = stairsBrightness[0]>stairsBrightness[12]?stairsBrightness[0]:stairsBrightness[12];
+  analogWrite(railPin,dimmRail<lB?lB:dimmRail);
 }
 
 void railOff(){
-  if(railBrightness > dimmRail)
-    railBrightness-=25;
+  analogWrite(railPin,stairsBrightness[0]>stairsBrightness[12]?stairsBrightness[0]:stairsBrightness[12]);
+  int lB = stairsBrightness[0]>stairsBrightness[12]?stairsBrightness[0]:stairsBrightness[12];
+  analogWrite(railPin,dimmRail<lB?lB:dimmRail);
 }
 
 void loop() {
@@ -310,17 +316,3 @@ void loop() {
     //Serial.println(analogRead(photoPin));
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
